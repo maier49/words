@@ -1,4 +1,7 @@
 var words = require('./words.json');
+function stringifyKnown(known) {
+	return known.gr.map(g => g).sort().join('') + 'Y' + known.y.map(({l, index}) => `${l}${index}`).sort().join('') + 'G' + known.g.map(({l, index}) => `${l}${index}`).sort().join('');
+}
 const addGuessToKnown = function(guess = '', known = {gr: [], y: [], g: []}) {
 	const newKnown = {
 		gr: [...known.gr],
@@ -42,15 +45,10 @@ const addWordToKnown = function(known, word) {
 	}
 	return newKnown;
 }
-const test = function(known, word, guess = false) {
-	const fits = known.gr.every(l => word.indexOf(l) === -1) &&
-		known.y.every(l => word.indexOf(l.l) > -1) &&
+const test = function(known, word) {
+	return known.gr.every(l => word.indexOf(l) === -1) &&
+		known.y.every(l => word.indexOf(l.l) > -1 && word.indexOf(l.l) !== l.index) &&
 		known.g.every(g => word[g.index] === g.l);
-	if (guess) {
-		return fits && known.y.every(l => word.indexOf(l.l) !== l.index);
-	} else {
-		return fits;
-	}
 }
 const possibleWords = function(known, guesses, dict = words) {
 	var possibleWords = dict
@@ -75,28 +73,32 @@ const knownFromDiff = function(known, guess, answer) {
 exports.knownFromDiff = knownFromDiff;
 
 exports.nextGuess = function(known, dict = words) {
+	const cache = {};
 	let bestIndex = 0;
-	let lowestScore = 100000;
+	let lowestScore = 15000*15000;
 	const possibleGuesses = words.filter(w => test(known, w, true));
 	for (let i = 0; i < possibleGuesses.length; i++) {
 		let score = 0;
 		for (let j = 0; j < possibleGuesses.length; j++) {
 			const newKnown = knownFromDiff(known, possibleGuesses[i], possibleGuesses[j]);
-			score += possibleWords(newKnown).length / possibleGuesses.length;
+			const knownString = stringifyKnown(newKnown);
+			const possibleCount = cache[knownString] || possibleWords(newKnown).length;
+			cache[knownString] = possibleCount;
+			score += possibleCount;
 		}
-
-		console.log(`${i} of ${possibleGuesses.length} words\n`);
 
 	        // var guess = possibleGuesses[i];
 		// const newKnown = addWordToKnown(known, guess);
 		// var score = possibleWords(newKnown).length;
 		if (score < lowestScore) {
+			console.log(`${possibleGuesses[i]} at ${score}, index: ${i}`);
 			lowestScore = score;
 			bestIndex = i;
 		}
 	}
 
 	return {
+
 		guess: possibleGuesses[bestIndex],
 		score: lowestScore
 	};
