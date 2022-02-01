@@ -58,15 +58,38 @@ const possibleWords = function(known, guesses, dict = words) {
 	return possibleWords;
 };
 exports.possibleWords = possibleWords;
+const knownFromDiff = function(known, guess, answer) {
+	const addToKnown = [];
+	for (let i =0; i < guess.length; i++) {
+		if (guess[i] === answer[i]) {
+			addToKnown.push({l: guess[i], t: 'g'});
+		} else if (answer.indexOf(guess[i]) > -1) {
+			addToKnown.push({l: guess[i]});
+		} else {
+			addToKnown.push(guess[i]);
+		}
+	}
+
+	return addGuessToKnown(addToKnown, known);
+}
+exports.knownFromDiff = knownFromDiff;
 
 exports.nextGuess = function(known, dict = words) {
 	let bestIndex = 0;
 	let lowestScore = 100000;
 	const possibleGuesses = words.filter(w => test(known, w, true));
 	for (let i = 0; i < possibleGuesses.length; i++) {
-	        var guess = possibleGuesses[i];
-		const newKnown = addWordToKnown(known, guess);
-		var score = possibleWords(newKnown).length;
+		let score = 0;
+		for (let j = 0; j < possibleGuesses.length; j++) {
+			const newKnown = knownFromDiff(known, possibleGuesses[i], possibleGuesses[j]);
+			score += possibleWords(newKnown).length / possibleGuesses.length;
+		}
+
+		console.log(`${i} of ${possibleGuesses.length} words\n`);
+
+	        // var guess = possibleGuesses[i];
+		// const newKnown = addWordToKnown(known, guess);
+		// var score = possibleWords(newKnown).length;
 		if (score < lowestScore) {
 			lowestScore = score;
 			bestIndex = i;
