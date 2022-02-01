@@ -47,7 +47,7 @@ const test = function(known, word, guess = false) {
 		known.y.every(l => word.indexOf(l.l) > -1) &&
 		known.g.every(g => word[g.index] === g.l);
 	if (guess) {
-		return fits;
+		return fits && known.y.every(l => word.indexOf(l.l) !== l.index);
 	} else {
 		return fits;
 	}
@@ -62,7 +62,7 @@ exports.possibleWords = possibleWords;
 exports.nextGuess = function(known, dict = words) {
 	let bestIndex = 0;
 	let lowestScore = 100000;
-	const possibleGuesses = words.filter(w => test(known, w));
+	const possibleGuesses = words.filter(w => test(known, w, true));
 	for (let i = 0; i < possibleGuesses.length; i++) {
 	        var guess = possibleGuesses[i];
 		const newKnown = addWordToKnown(known, guess);
