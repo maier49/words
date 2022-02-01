@@ -20,7 +20,7 @@ const addGuessToKnown = function(guess = '', known = {gr: [], y: [], g: []}) {
 			}
 		} else {
 			if (newKnown.y.indexOf(l.l) === -1) {
-				newKnown.y.push(l.l);
+				newKnown.y.push({ l: l.l, index: i});
 			}
 		}
 	}
@@ -34,17 +34,23 @@ const addWordToKnown = function(known, word) {
 		g: [...known.g]
 	};
 	for (let i = 0; i < word.length; i++) {
-		if (newKnown.gr.indexOf(word[i]) === -1 && newKnown.y.indexOf(word[i]) === -1 &&
-		newKnown.g.every(({l}) => l !== word[i])) {
+		if (newKnown.gr.indexOf(word[i]) === -1 && 
+			newKnown.y.every(({l}) => l !== word[i]) &&
+			newKnown.g.every(({l}) => l !== word[i])) {
 			newKnown.gr.push(word[i]);
 		}
 	}
 	return newKnown;
 }
-const test = function(known, word) {
-	return known.gr.every(l => word.indexOf(l) === -1) &&
-		known.y.every(l => word.indexOf(l) > -1) &&
+const test = function(known, word, guess = false) {
+	const fits = known.gr.every(l => word.indexOf(l) === -1) &&
+		known.y.every(l => word.indexOf(l.l) > -1) &&
 		known.g.every(g => word[g.index] === g.l);
+	if (guess) {
+		return fits;
+	} else {
+		return fits;
+	}
 }
 const possibleWords = function(known, guesses, dict = words) {
 	var possibleWords = dict
